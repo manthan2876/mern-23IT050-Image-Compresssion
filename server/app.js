@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import imageRoutes from './routes/imageRoutes.js';
+import imageRoutes from './routes/imageRoutes.route';
 import { logger } from './config/logger.js';
 
 dotenv.config();
@@ -18,6 +18,9 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Routes
 app.use('/api/images', imageRoutes);
+app.use('/api/analytics', imageRoutes);
+app.use('/api/images/:id/download', imageRoutes);
+app.use('/api/images/:id', imageRoutes); 
 
 // Server Listening
 const PORT = process.env.PORT || 5000;

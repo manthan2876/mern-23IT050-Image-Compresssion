@@ -48,32 +48,58 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
+
 // Fetch Uploaded Images
 router.get('/', async (req, res) => {
-  try {
-    const images = await Image.find().sort({ createdAt: -1 });
-    res.json(images);
-  } catch (err) {
-    logger.error('Fetch Images Error:', err);
-    res.status(500).json({ error: 'Failed to fetch images' });
-  }
-});
-
-// Download Compressed Image
+    try {
+      const images = await Image.find().sort({ createdAt: -1 });
+      res.json(images);
+    } catch (err) {
+      logger.error('Fetch Images Error:', err);
+      res.status(500).json({ error: 'Failed to fetch images' });
+    }
+  });
+  
+  // Download Compressed Image
 router.get('/:id/download', async (req, res) => {
-  try {
-    const image = await Image.findById(req.params.id);
-    if (!image) return res.status(404).json({ error: 'Image not found' });
+    try {
+      const image = await Image.findById(req.params.id);
+      if (!image) return res.status(404).json({ error: 'Image not found' });
+  
+      res.download(image.compressedPath);
+      logger.info(`Image downloaded: ${image.originalName}`);
+    } catch (err) {
+      logger.error('Download Image Error:', err);
+      res.status(500).json({ error: 'Failed to download image' });
+    }
+  });
+  
+  router.get('/analytics', async (req, res) => {
+    try {
+      const totalCompressions = await Image.countDocuments();
+      const totalOriginalSize = await Image.aggregate([
+        { $group: { _id: null, total: { $sum: '$originalSize' } } }
+      ]);
+      const totalCompressedSize = await Image.aggregate([
+        { $group: { _id: null, total: { $sum: '$compressedSize' } } }
+      ]);
+  
+      const totalOriginal = totalOriginalSize[0]?.total || 0;
+      const totalCompressed = totalCompressedSize[0]?.total || 0;
+      const totalSaved = totalOriginal - totalCompressed;
+      const totalSavedPercent = totalOriginal > 0 ? ((totalSaved / totalOriginal) * 100).toFixed(2) : 0;
+  
+      res.json({
+        totalCompressions,
+        totalOriginalSize: (totalOriginal / 1024).toFixed(2), // in KB
+        totalCompressedSize: (totalCompressed / 1024).toFixed(2),
+        totalSizeSaved: (totalSaved / 1024).toFixed(2),
+        totalSavedPercent
+      });
+    } catch (err) {
+      logger.error('Analytics Fetch Error:', err);
+      res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+  });
 
-    res.download(image.compressedPath);
-    logger.info(`Image downloaded: ${image.originalName}`);
-  } catch (err) {
-    logger.error('Download Image Error:', err);
-    res.status(500).json({ error: 'Failed to download image' });
-  }
-});
-
-export default router;
-
-
-// === server/config/logger.js ===
+  export default router;
