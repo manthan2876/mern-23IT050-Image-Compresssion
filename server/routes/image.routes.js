@@ -6,6 +6,9 @@ import fs from 'fs';
 import path from 'path';
 import { Image } from '../models/image.js';
 import { logger } from '../config/logger.js';
+const cors = require('cors');
+app.use(cors());
+
 
 const router = express.Router();
 const upload = multer({ dest: 'uploads/' });
