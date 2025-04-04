@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import imageRoutes from './routes/image.route';
+import imageRoutes from './routes/imageRoutes.js';
 import { logger } from './config/logger.js';
 
 dotenv.config();
